@@ -4,10 +4,12 @@ import threading
 class TextToSpeech:
     def __init__(self):
         self.engine = None
-        # Initialize in a way that doesn't conflict with threads if possible
-        # pyttsx3 init might need to happen on the main thread or be carefully managed
         try:
             self.engine = pyttsx3.init()
+            # Warmup / Preload
+            self.engine.say(" ")
+            self.engine.runAndWait()
+            print("TTS Engine: pyttsx3 (Preloaded on CPU)")
         except Exception as e:
             print(f"TTS Init Error: {e}")
 

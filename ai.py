@@ -46,7 +46,10 @@ def analyze_frame(frame, prompt="Describe what you see in this image. Is the per
         )
         return response.choices[0].message.content
     except Exception as e:
-        return f"Error: {e}"
+        error_msg = str(e)
+        if "Connection refused" in error_msg or "404" in error_msg:
+            return "Error: Is Ollama running? Check connection."
+        return f"AI Error: {error_msg[:50]}..."
 
 if __name__ == "__main__":
     print(f"Connecting to Vision Model at: {API_BASE}")
