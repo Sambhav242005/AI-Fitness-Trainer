@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO11 AI Fitness Trainer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        #video-container {
+            flex: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            border-right: 2px solid #333;
+        }
+
+        #video-feed {
+            max-width: 100%;
+            max-height: 100%;
+            border: 2px solid #444;
+        }
+
+        #stats-panel {
+            flex: 1;
+            padding: 20px;
+            background-color: #2b2b2b;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            text-align: center;
+            color: #00ff00;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .stat-box {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #rep-count {
+            font-size: 80px;
+            font-weight: bold;
+            color: #00ff00;
+            margin: 0;
+        }
+
+        #feedback {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffcc00;
+        }
+
+        #ai-feedback {
+            font-style: italic;
+            color: #00ffff;
+            border: 1px dashed #555;
+            padding: 10px;
+            margin-top: auto;
+        }
+
+        #progress-container {
+            width: 100%;
+            background-color: #555;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #00ff00;
+            transition: width 0.1s;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="video-container">
+        <!-- Hidden video element for raw capture -->
+        <video id="raw-video" autoplay playsinline style="display: none;"></video>
+        <!-- Hidden canvas for frame extraction -->
+        <canvas id="capture-canvas" style="display: none;"></canvas>
+
+        <!-- Display annotated frame from server -->
+        <img id="video-feed" src="" alt="Waiting for camera...">
+    </div>
+
+    <div id="stats-panel">
+        <h1>AI TRAINER</h1>
+
+        <div class="control-group">
+            <label>Select Exercise:</label>
+            <select id="exercise-select" onchange="changeExercise()">
+                <option value="Squat">Squat</option>
+                <option value="Bicep Curl">Bicep Curl</option>
+                <option value="Push Up">Push Up</option>
+            </select>
+        </div>
+
+        <div class="stat-box">
+            <p id="rep-count">0</p>
+            <p>REPS</p>
+        </div>
+
+        <div class="control-group">
+            <label>Rep Progress:</label>
+            <div id="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+
+        <div class="stat-box">
+            <p id="feedback">Get Ready</p>
+        </div>
+
+        <div id="ai-feedback">AI Coach: Ready</div>
+
+        <button onclick="startCamera()"
+            style="padding: 10px; background-color: #00ff00; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Start
+            Camera</button>
+    </div>
+
+    <script>
+        const socket = io();
+        const videoFeed = document.getElementById('video-feed');
+        const rawVideo = document.getElementById('raw-video');
+        const canvas = document.getElementById('capture-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const repCount = document.getElementById('rep-count');
+        const feedback = document.getElementById('feedback');
+        const progressBar = document.getElementById('progress-bar');
+        const aiFeedback = document.getElementById('ai-feedback');
+
+        let isStreaming = false;
+
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+                rawVideo.srcObject = stream;
+                isStreaming = true;
+
+                // Start sending frames
+                setInterval(sendFrame, 100); // ~10 FPS
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                alert("Could not access camera. Please allow permissions.");
+            }
+        }
+
+        function sendFrame() {
+            if (!isStreaming) return;
+
+            // Draw video frame to canvas
+            canvas.width = rawVideo.videoWidth;
+            canvas.height = rawVideo.videoHeight;
+            ctx.drawImage(rawVideo, 0, 0, canvas.width, canvas.height);
+
+            // Convert to base64 (JPEG)
+            // remove "data:image/jpeg;base64," prefix
+            const dataURL = canvas.toDataURL('image/jpeg', 0.7);
+            const base64Data = dataURL.split(',')[1];
+
+            socket.emit('process_frame', { image: base64Data });
+        }
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('annotated_frame', (data) => {
+            videoFeed.src = `data:image/jpeg;base64,${data.image}`;
+        });
+
+        socket.on('stats_update', (data) => {
+            repCount.innerText = data.reps;
+            feedback.innerText = data.feedback;
+            progressBar.style.width = `${data.progress * 100}%`;
+
+            // Color coding
+            if (data.feedback.includes("Good")) {
+                feedback.style.color = "#00ff00";
+            } else if (data.feedback.includes("Deep") || data.feedback.includes("Lower")) {
+                feedback.style.color = "#ff0000";
+            } else {
+                feedback.style.color = "#ffcc00";
+            }
+        });
+
+        socket.on('ai_feedback', (data) => {
+            aiFeedback.innerText = data.text;
+        });
+
+        function changeExercise() {
+            const select = document.getElementById('exercise-select');
+            socket.emit('change_exercise', { exercise: select.value });
+            repCount.innerText = "0";
+            feedback.innerText = "Switching...";
+        }
+    </script>
+</body>
+
+</html>

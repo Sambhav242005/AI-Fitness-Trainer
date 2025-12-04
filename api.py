@@ -1,19 +1,19 @@
 import cv2
 import numpy as np
 import torch
-from PyQt6.QtCore import QThread, pyqtSignal
+import threading
+import time
 from ultralytics import YOLO
 from engine import RepCounter
+import ai
+import tts
 
 # --- WORKER THREAD: YOLO INFERENCE ---
-class VideoThread(QThread):
-    change_pixmap_signal = pyqtSignal(np.ndarray)
-    stats_signal = pyqtSignal(int, str, str, float) # Reps, Stage, Feedback, Progress
-    device_signal = pyqtSignal(str) # New signal for device info
-
-    def __init__(self):
-        super().__init__()
-        self._run_flag = True
+class VideoProcessor:
+    def __init__(self, callback_frame=None, callback_stats=None, callback_ai=None):
+        self.callback_frame = callback_frame
+        self.callback_stats = callback_stats
+        self.callback_ai = callback_ai
         
         # Check for GPU
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -33,80 +33,106 @@ class VideoThread(QThread):
         self.model.to(self.device)
         self.exercise_type = "Squat"
         self.counter = RepCounter("Squat")
+        
+        # AI Trigger Logic
+        self.last_rep_count = 0
+        self.trigger_interval = 5 # Analyze every 5 reps
 
     def set_exercise(self, exercise):
         self.exercise_type = exercise
         self.counter = RepCounter(exercise)
+        self.last_rep_count = 0 # Reset trigger
 
-    def run(self):
-        # Emit device info once at start
-        self.device_signal.emit(self.model_info)
+    def run_ai_analysis(self, frame, exercise_type, count):
+        """Runs in a separate thread to avoid blocking video."""
+        print(f"Triggering AI Analysis for {exercise_type} at rep {count}...")
         
-        # Capture from webcam (0)
-        cap = cv2.VideoCapture(0)
+        # Notify UI
+        if self.callback_ai:
+            self.callback_ai("AI Coach: Analyzing form...")
+        tts.speak("Analyzing your form, please wait.")
         
-        while self._run_flag:
-            ret, frame = cap.read()
-            if not ret:
-                break
-                
-            # Run YOLO Inference
-            # verbose=False prevents console spam
-            results = self.model(frame, verbose=False, conf=0.5)
-            
-            # Annotate frame
-            annotated_frame = results[0].plot(boxes=False) # Draw skeleton only
-            
-            # Extract Keypoints for Logic
-            try:
-                # keypoints.data is shape (1, 17, 3) -> Batch, Points, (x,y,conf)
-                keypoints = results[0].keypoints.data[0].cpu().numpy()
-                
-                # Convert to dict for easier access {index: (x,y)}
-                # Map: 5=L_Shoulder, 7=L_Elbow, 9=L_Wrist, 11=L_Hip, 13=L_Knee, 15=L_Ankle
-                lm_dict = {}
-                for idx, kp in enumerate(keypoints):
-                    x, y, conf = kp
-                    if conf > 0.5: # Only trust confident points
-                        lm_dict[idx] = (int(x), int(y))
-                
-                # Process Reps
-                reps, stage, feedback, progress = self.counter.process(lm_dict)
-                self.stats_signal.emit(reps, stage, feedback, progress)
-                
-                # Visual Overlays specific to form
-                if self.exercise_type == "Squat" and 13 in lm_dict:
-                    # Draw "Depth Line" at knee height
-                    knee_y = lm_dict[13][1]
-                    # Use the threshold to show where the hip needs to be
-                    target_y = int(knee_y * self.counter.squat_depth_thresh)
-                    
-                    cv2.line(annotated_frame, (0, target_y), (frame.shape[1], target_y), (0, 255, 255), 2)
-                    cv2.putText(annotated_frame, "Target Depth", (10, target_y - 10), 
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+        # Prepare prompt
+        prompt = f"I am doing {exercise_type}. I just finished {count} reps. Look at my form in this image. Give me one specific tip to improve. Keep it short (1 sentence)."
+        
+        # Call AI (Blocking)
+        response = ai.analyze_frame(frame, prompt)
+        
+        # Notify UI and Speak
+        if self.callback_ai:
+            self.callback_ai(f"AI Coach: {response}")
+        tts.speak(response)
 
-                # Draw Progress Bar on Video
-                # Bottom of screen
-                h, w, _ = annotated_frame.shape
-                bar_x = 50
-                bar_y = h - 40
-                bar_w = w - 100
-                bar_h = 20
+    def process_frame(self, frame_bytes):
+        """Processes a single frame from the client."""
+        # Decode image
+        nparr = np.frombuffer(frame_bytes, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if frame is None:
+            return
+
+        # Run YOLO Inference
+        # verbose=False prevents console spam
+        results = self.model(frame, verbose=False, conf=0.5)
+        
+        # Annotate frame
+        annotated_frame = results[0].plot(boxes=False) # Draw skeleton only
+        
+        # Extract Keypoints for Logic
+        try:
+            # keypoints.data is shape (1, 17, 3) -> Batch, Points, (x,y,conf)
+            keypoints = results[0].keypoints.data[0].cpu().numpy()
+            
+            # Convert to dict for easier access {index: (x,y)}
+            # Map: 5=L_Shoulder, 7=L_Elbow, 9=L_Wrist, 11=L_Hip, 13=L_Knee, 15=L_Ankle
+            lm_dict = {}
+            for idx, kp in enumerate(keypoints):
+                x, y, conf = kp
+                if conf > 0.5: # Only trust confident points
+                    lm_dict[idx] = (int(x), int(y))
+            
+            # Process Reps
+            reps, stage, feedback, progress = self.counter.process(lm_dict)
+            
+            if self.callback_stats:
+                self.callback_stats(reps, stage, feedback, progress)
+            
+            # --- AI Trigger Check ---
+            if reps > 0 and reps % self.trigger_interval == 0 and reps != self.last_rep_count:
+                self.last_rep_count = reps
+                # Launch AI thread
+                threading.Thread(target=self.run_ai_analysis, args=(frame.copy(), self.exercise_type, reps)).start()
+            
+            # Visual Overlays specific to form
+            if self.exercise_type == "Squat" and 13 in lm_dict:
+                # Draw "Depth Line" at knee height
+                knee_y = lm_dict[13][1]
+                # Use the threshold to show where the hip needs to be
+                target_y = int(knee_y * self.counter.squat_depth_thresh)
                 
-                # Background
-                cv2.rectangle(annotated_frame, (bar_x, bar_y), (bar_x + bar_w, bar_y + bar_h), (50, 50, 50), -1)
-                # Fill
-                fill_w = int(bar_w * progress)
-                cv2.rectangle(annotated_frame, (bar_x, bar_y), (bar_x + fill_w, bar_y + bar_h), (0, 255, 0), -1)
+                cv2.line(annotated_frame, (0, target_y), (frame.shape[1], target_y), (0, 255, 255), 2)
+                cv2.putText(annotated_frame, "Target Depth", (10, target_y - 10), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
 
-            except Exception as e:
-                # Usually happens if no person is detected
-                pass
+            # Draw Progress Bar on Video
+            # Bottom of screen
+            h, w, _ = annotated_frame.shape
+            bar_x = 50
+            bar_y = h - 40
+            bar_w = w - 100
+            bar_h = 20
             
-            self.change_pixmap_signal.emit(annotated_frame)
-            
-        cap.release()
+            # Background
+            cv2.rectangle(annotated_frame, (bar_x, bar_y), (bar_x + bar_w, bar_y + bar_h), (50, 50, 50), -1)
+            # Fill
+            fill_w = int(bar_w * progress)
+            cv2.rectangle(annotated_frame, (bar_x, bar_y), (bar_x + fill_w, bar_y + bar_h), (0, 255, 0), -1)
 
-    def stop(self):
-        self._run_flag = False
-        self.wait()
+        except Exception as e:
+            # Usually happens if no person is detected
+            pass
+        
+        # Return annotated frame
+        _, buffer = cv2.imencode('.jpg', annotated_frame)
+        return buffer.tobytes()

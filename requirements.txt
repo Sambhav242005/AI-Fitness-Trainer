@@ -4,6 +4,11 @@ flask-cors
 opencv-python
 numpy
 Pillow
+openai
+python-dotenv
+pyttsx3
+flask-socketio
+eventlet
 
 ultralytics
 torch==2.6.0+cu124

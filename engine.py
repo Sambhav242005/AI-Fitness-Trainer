@@ -35,7 +35,7 @@ class RepCounter:
         self.squat_depth_thresh = 0.95  # Hip Y should be > 95% of Knee Y (pixels go down)
         self.stand_thresh = 170  # Leg straighten angle
         # Relaxed Curl Thresholds
-        self.curl_up_thresh = 50   # Easier to hit (was 30)
+        self.curl_up_thresh = 60   # Easier to hit (was 30)
         self.curl_down_thresh = 150 # Allows slight bend (was 160)
         
         self.pushup_up_thresh = 160
@@ -200,12 +200,16 @@ class RepCounter:
             self.feedback = f"{active_side}: Good Curl!"
             
         # Form feedback during movement
-        if self.stage == "down" and angle < 100 and angle > self.curl_up_thresh:
-             self.feedback = f"{active_side}: Keep Going!"
-        elif self.stage == "up" and angle > 90:
-             self.feedback = f"{active_side}: Extend Fully"
+        if self.stage == "down":
+            if angle < 100 and angle > self.curl_up_thresh:
+                self.feedback = f"{active_side}: Keep Going!"
+            else:
+                self.feedback = f"{active_side}: Curl Up!"
+        elif self.stage == "up":
+            if angle < self.curl_down_thresh:
+                self.feedback = f"{active_side}: Extend Arm!"
             
-        return self.count, self.stage, f"{active_side} Angle: {int(angle)}", progress
+        return self.count, self.stage, self.feedback, progress
 
     def _process_pushup(self, lm):
         # Pushups are similar to curls (Shoulder-Elbow-Wrist) but reversed states.

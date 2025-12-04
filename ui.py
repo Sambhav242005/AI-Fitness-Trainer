@@ -92,6 +92,13 @@ class MainWindow(QMainWindow):
         stats_layout.addWidget(QLabel("Live Feedback:"))
         stats_layout.addWidget(self.feedback_label)
         
+        stats_layout.addSpacing(20)
+        self.ai_label = QLabel("AI Coach: Ready")
+        self.ai_label.setWordWrap(True)
+        self.ai_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.ai_label.setStyleSheet("color: #00ffff; border: 1px dashed #555; padding: 10px; font-style: italic;")
+        stats_layout.addWidget(self.ai_label)
+        
         stats_layout.addStretch()
         
         # Device Status Label
@@ -114,6 +121,7 @@ class MainWindow(QMainWindow):
         self.thread.change_pixmap_signal.connect(self.update_image)
         self.thread.stats_signal.connect(self.update_stats)
         self.thread.device_signal.connect(self.update_device_status)
+        self.thread.ai_feedback_signal.connect(self.update_ai_feedback)
         self.thread.start()
 
     def change_exercise(self, text):
@@ -148,6 +156,10 @@ class MainWindow(QMainWindow):
     @pyqtSlot(str)
     def update_device_status(self, info):
         self.device_label.setText(info)
+
+    @pyqtSlot(str)
+    def update_ai_feedback(self, text):
+        self.ai_label.setText(text)
 
     @pyqtSlot(int, str, str, float)
     def update_stats(self, reps, stage, feedback, progress):
