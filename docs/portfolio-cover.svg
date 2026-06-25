@@ -1,0 +1,213 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#141414"/>
+      <stop offset="100%" stop-color="#0d0d0d"/>
+    </linearGradient>
+    <linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e1e1e"/>
+      <stop offset="100%" stop-color="#181818"/>
+    </linearGradient>
+    <linearGradient id="statsGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#222"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </linearGradient>
+    <linearGradient id="progFill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e676"/>
+      <stop offset="70%" stop-color="#00e676"/>
+      <stop offset="100%" stop-color="#ffab00"/>
+    </linearGradient>
+    <filter id="skeletonGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="cardShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="760" fill="url(#bg)"/>
+
+  <!-- ===== HEADER ===== -->
+  <rect x="0" y="0" width="1200" height="48" fill="#111"/>
+  <text x="600" y="30" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="bold" fill="#00e676" letter-spacing="4">YOLO11 AI FITNESS TRAINER</text>
+  <line x1="0" y1="48" x2="1200" y2="48" stroke="#2a2a2a" stroke-width="1"/>
+
+  <!-- ===== VIDEO PANEL ===== -->
+  <rect x="24" y="64" width="700" height="490" rx="10" fill="#000" stroke="#333" stroke-width="1" filter="url(#cardShadow)"/>
+  <rect x="34" y="74" width="680" height="450" rx="6" fill="#080808"/>
+
+  <!-- LIVE indicator -->
+  <rect x="42" y="82" width="80" height="20" rx="3" fill="#00e676" opacity="0.12"/>
+  <circle cx="54" cy="92" r="3" fill="#00e676"/>
+  <text x="63" y="96" font-family="Arial,sans-serif" font-size="9" fill="#00e676" font-weight="bold">LIVE</text>
+
+  <!-- Resolution label -->
+  <text x="698" y="96" text-anchor="end" font-family="Arial,sans-serif" font-size="9" fill="#555">640×480</text>
+
+  <!-- ===== SKELETON (Squat, front-facing) ===== -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Skeleton bones -->
+    <g stroke="#00e676" stroke-width="2.5" opacity="0.55">
+      <line x1="370" y1="88" x2="370" y2="102"/>
+      <!-- Shoulder line -->
+      <line x1="295" y1="132" x2="445" y2="132"/>
+      <!-- Torso -->
+      <line x1="295" y1="132" x2="310" y2="260"/>
+      <line x1="445" y1="132" x2="430" y2="260"/>
+      <line x1="310" y1="260" x2="430" y2="260"/>
+      <!-- Left arm -->
+      <line x1="295" y1="132" x2="255" y2="178"/>
+      <line x1="255" y1="178" x2="238" y2="218"/>
+      <!-- Right arm -->
+      <line x1="445" y1="132" x2="485" y2="178"/>
+      <line x1="485" y1="178" x2="502" y2="218"/>
+      <!-- Left leg -->
+      <line x1="310" y1="260" x2="290" y2="332"/>
+      <line x1="290" y1="332" x2="312" y2="435"/>
+      <!-- Right leg -->
+      <line x1="430" y1="260" x2="450" y2="332"/>
+      <line x1="450" y1="332" x2="428" y2="435"/>
+    </g>
+
+    <!-- Keypoints -->
+    <g fill="#00e676">
+      <circle cx="370" cy="88" r="5"/>
+      <circle cx="353" cy="81" r="3.5"/>
+      <circle cx="387" cy="81" r="3.5"/>
+      <circle cx="338" cy="91" r="3"/>
+      <circle cx="402" cy="91" r="3"/>
+      <circle cx="295" cy="132" r="5"/>
+      <circle cx="445" cy="132" r="5"/>
+      <circle cx="255" cy="178" r="4"/>
+      <circle cx="485" cy="178" r="4"/>
+      <circle cx="238" cy="218" r="3.5"/>
+      <circle cx="502" cy="218" r="3.5"/>
+      <circle cx="310" cy="260" r="5.5"/>
+      <circle cx="430" cy="260" r="5.5"/>
+      <circle cx="290" cy="332" r="5"/>
+      <circle cx="450" cy="332" r="5"/>
+      <circle cx="312" cy="435" r="3.5"/>
+      <circle cx="428" cy="435" r="3.5"/>
+    </g>
+
+    <!-- Knee angle arc -->
+    <g>
+      <line x1="290" y1="332" x2="268" y2="310" stroke="#ffab00" stroke-width="2"/>
+      <line x1="290" y1="332" x2="312" y2="346" stroke="#ffab00" stroke-width="2"/>
+      <path d="M 276 318 A 20 20 0 0 1 302 340" stroke="#ffab00" stroke-width="1.5" fill="none"/>
+      <text x="270" y="314" font-family="Arial,sans-serif" font-size="11" fill="#ffab00" font-weight="bold">87°</text>
+    </g>
+  </g>
+
+  <!-- Depth target line -->
+  <line x1="34" y1="272" x2="714" y2="272" stroke="#ffab00" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <rect x="622" y="263" width="82" height="18" rx="3" fill="#ffab00" opacity="0.1"/>
+  <text x="663" y="276" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" fill="#ffab00">TARGET DEPTH</text>
+
+  <!-- Progress bar -->
+  <rect x="60" y="488" width="628" height="20" rx="10" fill="#222"/>
+  <rect x="60" y="488" width="440" height="20" rx="10" fill="url(#progFill)" opacity="0.85"/>
+  <text x="280" y="503" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="bold" fill="#111" letter-spacing="2">REP PROGRESS</text>
+
+  <!-- ===== STATS PANEL ===== -->
+  <rect x="744" y="64" width="432" height="490" rx="10" fill="url(#panelGrad)" stroke="#333" stroke-width="1" filter="url(#cardShadow)"/>
+
+  <!-- Panel title -->
+  <text x="960" y="96" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="bold" fill="#00e676" letter-spacing="2">AI TRAINER</text>
+  <line x1="764" y1="108" x2="1156" y2="108" stroke="#2a2a2a" stroke-width="1"/>
+
+  <!-- Exercise selector -->
+  <rect x="764" y="122" width="392" height="34" rx="6" fill="#2a2a2a"/>
+  <text x="780" y="144" font-family="Arial,sans-serif" font-size="12" fill="#888">Exercise</text>
+  <text x="1000" y="144" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#e0e0e0">Squat</text>
+  <polygon points="1100,138 1108,147 1092,147" fill="#666"/>
+
+  <!-- Exercise pills -->
+  <g transform="translate(764, 166)">
+    <rect x="0" y="0" width="122" height="28" rx="14" fill="#00e676" opacity="0.15"/>
+    <text x="61" y="19" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" fill="#00e676" font-weight="bold">SQUAT</text>
+    <rect x="132" y="0" width="122" height="28" rx="14" fill="#2a2a2a"/>
+    <text x="193" y="19" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" fill="#777">BICEP CURL</text>
+    <rect x="264" y="0" width="122" height="28" rx="14" fill="#2a2a2a"/>
+    <text x="325" y="19" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" fill="#777">PUSH UP</text>
+  </g>
+
+  <!-- Rep count card -->
+  <rect x="764" y="208" width="392" height="110" rx="8" fill="url(#statsGrad)" stroke="#2a2a2a" stroke-width="1"/>
+  <text x="960" y="238" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#777" letter-spacing="1">REP COUNT</text>
+  <text x="960" y="298" text-anchor="middle" font-family="Arial,sans-serif" font-size="64" font-weight="bold" fill="#00e676">12</text>
+
+  <!-- Feedback card -->
+  <rect x="764" y="332" width="392" height="54" rx="8" fill="url(#statsGrad)" stroke="#2a2a2a" stroke-width="1"/>
+  <text x="960" y="354" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" fill="#777">FEEDBACK</text>
+  <text x="960" y="376" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="bold" fill="#ffab00">Go Deeper!</text>
+
+  <!-- AI coach card -->
+  <rect x="764" y="396" width="392" height="54" rx="8" fill="url(#statsGrad)" stroke="#2a2a2a" stroke-width="1"/>
+  <text x="960" y="418" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" fill="#777">AI COACH</text>
+  <text x="960" y="438" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-style="italic" fill="#00bcd4">Keep your chest up on the way down</text>
+
+  <!-- Start button -->
+  <rect x="764" y="468" width="392" height="42" rx="8" fill="#00c853" opacity="0.9"/>
+  <text x="960" y="495" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="#111">START CAMERA</text>
+
+  <!-- ===== PIPELINE (compact) ===== -->
+  <rect x="24" y="568" width="1152" height="128" rx="10" fill="#181818" stroke="#2a2a2a" stroke-width="1"/>
+  <text x="600" y="590" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" fill="#555" letter-spacing="3">PIPELINE</text>
+  <line x1="44" y1="598" x2="1156" y2="598" stroke="#2a2a2a" stroke-width="1"/>
+
+  <g transform="translate(0, 604)">
+    <!-- Camera -->
+    <rect x="50" y="46" width="128" height="48" rx="6" fill="#222" stroke="#3a3a3a" stroke-width="1"/>
+    <rect x="78" y="8" width="72" height="30" rx="4" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1"/>
+    <rect x="95" y="17" width="14" height="12" rx="2" fill="none" stroke="#e0e0e0" stroke-width="1.2"/>
+    <circle cx="114" cy="25" r="4" fill="none" stroke="#e0e0e0" stroke-width="1.2"/>
+    <text x="114" y="75" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold" fill="#e0e0e0">Camera</text>
+    <text x="114" y="88" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" fill="#666">Flask / PyQt6</text>
+
+    <line x1="178" y1="70" x2="210" y2="70" stroke="#444" stroke-width="1.5"/>
+    <polygon points="210,66 218,70 210,74" fill="#444"/>
+
+    <!-- YOLO11 -->
+    <rect x="222" y="46" width="128" height="48" rx="6" fill="#222" stroke="#3a3a3a" stroke-width="1"/>
+    <text x="286" y="71" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold" fill="#00e676">YOLO11 Pose</text>
+    <text x="286" y="86" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" fill="#666">Nano (CPU) / X (GPU)</text>
+
+    <line x1="350" y1="70" x2="382" y2="70" stroke="#444" stroke-width="1.5"/>
+    <polygon points="382,66 390,70 382,74" fill="#444"/>
+
+    <!-- RepCounter -->
+    <rect x="394" y="46" width="128" height="48" rx="6" fill="#222" stroke="#3a3a3a" stroke-width="1"/>
+    <text x="458" y="71" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold" fill="#ffab00">RepCounter</text>
+    <text x="458" y="86" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" fill="#666">State machine · Angles</text>
+
+    <line x1="522" y1="70" x2="554" y2="70" stroke="#444" stroke-width="1.5"/>
+    <polygon points="554,66 562,70 554,74" fill="#444"/>
+
+    <!-- Ollama -->
+    <rect x="566" y="46" width="128" height="48" rx="6" fill="#222" stroke="#3a3a3a" stroke-width="1"/>
+    <text x="630" y="71" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold" fill="#00bcd4">Ollama Vision</text>
+    <text x="630" y="86" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" fill="#666">Qwen3-VL · Every 5 reps</text>
+
+    <line x1="694" y1="70" x2="726" y2="70" stroke="#444" stroke-width="1.5"/>
+    <polygon points="726,66 734,70 726,74" fill="#444"/>
+
+    <!-- TTS -->
+    <rect x="738" y="46" width="100" height="48" rx="6" fill="#222" stroke="#3a3a3a" stroke-width="1"/>
+    <text x="788" y="71" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold" fill="#e0e0e0">TTS</text>
+    <text x="788" y="86" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" fill="#666">pyttsx3</text>
+
+    <!-- Output -->
+    <rect x="866" y="46" width="180" height="48" rx="6" fill="#222" stroke="#00e676" stroke-width="1.2" stroke-opacity="0.3"/>
+    <text x="956" y="71" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="bold" fill="#00e676" opacity="0.9">Overlays + Stats</text>
+    <text x="956" y="86" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" fill="#666">Skeleton · Progress · Form</text>
+
+    <line x1="838" y1="70" x2="864" y2="70" stroke="#444" stroke-width="1.5"/>
+    <polygon points="864,66 872,70 864,74" fill="#444"/>
+  </g>
+
+  <!-- ===== FOOTER ===== -->
+  <text x="600" y="748" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" fill="#444">Privacy-focused · All processing on-device · Python 3.10+ · Ultralytics · PyTorch · OpenCV</text>
+</svg>
